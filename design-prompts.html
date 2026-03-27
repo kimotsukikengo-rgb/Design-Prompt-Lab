@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Design Prompt Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#09090b;--s1:#111114;--s2:#18181c;--s3:#222228;
+--bd:#27272e;--bdh:#35353e;
+--tx:#f4f4f6;--sub:#8b8b97;--dim:#55555f;
+--ac:#7c6df0;--ac2:#b0a4ff;--acbg:rgba(124,109,240,.1);
+--g:#10b981;--o:#f59e0b;--pk:#ec4899;--bl:#3b82f6;--r:#ef4444;
+--rd:12px;--rds:8px;
+--font-en:'Inter',sans-serif;--font-jp:'Noto Sans JP',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-jp);background:var(--bg);color:var(--tx);font-size:13px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px}
+a{color:var(--ac2);text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+/* ── Hero ── */
+.hero{text-align:center;padding:56px 16px 40px}
+.hero h1{font-family:var(--font-en);font-size:clamp(24px,4.5vw,40px);font-weight:800;background:linear-gradient(135deg,var(--ac),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p.sub{color:var(--sub);font-size:14px;margin-top:8px}
+.hero .desc{color:var(--dim);font-size:12px;margin-top:4px}
+
+/* ── Onboarding ── */
+.onb{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 auto 32px;max-width:700px}
+.onb-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rds);padding:14px 12px;text-align:center}
+.onb-card .num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--acbg);color:var(--ac);font-weight:700;font-size:11px;margin-bottom:6px}
+.onb-card h3{font-size:12px;font-weight:600;margin-bottom:4px}
+.onb-card p{font-size:10px;color:var(--sub);line-height:1.5}
+
+/* ── Panel (Company Info) ── */
+.panel{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rd);margin-bottom:24px;overflow:hidden}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;transition:background .15s}
+.panel-head:hover{background:var(--s2)}
+.panel-head h2{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.panel-head .arrow{transition:transform .25s;font-size:12px;color:var(--dim)}
+.panel.open .panel-head .arrow{transform:rotate(180deg)}
+.panel-body{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.panel.open .panel-body{max-height:800px}
+.panel-inner{padding:0 18px 18px;display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg.wide{grid-column:1/-1}
+.fg label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--sub)}
+.fg input,.fg textarea{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rds);padding:8px 10px;color:var(--tx);font-size:12px;font-family:var(--font-jp);outline:none;transition:border .2s}
+.fg input:focus,.fg textarea:focus{border-color:var(--ac)}
+.fg textarea{resize:vertical;min-height:60px}
+.panel-actions{display:flex;gap:8px;grid-column:1/-1;margin-top:4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:var(--rds);font-size:11px;font-weight:600;transition:all .2s}
+.btn-primary{background:var(--ac);color:#fff}
+.btn-primary:hover{background:#6b5ce7;transform:translateY(-1px)}
+.btn-ghost{border:1px solid var(--bd);color:var(--sub)}
+.btn-ghost:hover{border-color:var(--bdh);color:var(--tx)}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--g);color:#fff;padding:10px 20px;border-radius:var(--rds);font-size:12px;font-weight:600;opacity:0;transition:all .35s ease;z-index:999;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ── Tab Bar ── */
+.tabs-bar{display:flex;gap:4px;overflow-x:auto;padding:4px 0 12px;margin-bottom:4px;scrollbar-width:none}
+.tabs-bar::-webkit-scrollbar{display:none}
+.tab-btn{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:var(--rds);font-size:12px;font-weight:600;color:var(--sub);background:var(--s1);border:1px solid transparent;transition:all .2s;white-space:nowrap}
+.tab-btn:hover{color:var(--tx);background:var(--s2)}
+.tab-btn.act{color:var(--ac2);background:var(--acbg);border-color:var(--ac)}
+.tab-btn .icon{font-size:15px}
+.tab-btn .badge{background:var(--s3);color:var(--sub);font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px}
+.tab-btn.act .badge{background:var(--ac);color:#fff}
+
+/* ── Tab Content ── */
+.tc{display:none}
+.tc.act{display:block}
+
+/* ── Flow Nav ── */
+.flow-nav{display:flex;align-items:center;gap:0;overflow-x:auto;padding:8px 0 16px;scrollbar-width:none}
+.flow-nav::-webkit-scrollbar{display:none}
+.flow-step{flex-shrink:0;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--rds);cursor:pointer;transition:all .2s;border:1px solid transparent}
+.flow-step:hover{background:var(--s2)}
+.flow-step .snum{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:10px;font-weight:700;background:var(--s3);color:var(--sub);transition:all .2s}
+.flow-step .sname{font-size:11px;color:var(--sub);font-weight:500;transition:color .2s}
+.flow-step.act{border-color:var(--ac);background:var(--acbg)}
+.flow-step.act .snum{background:var(--ac);color:#fff}
+.flow-step.act .sname{color:var(--tx)}
+.flow-step.done .snum{background:var(--g);color:#fff}
+.flow-step.done .sname{color:var(--g)}
+.flow-arrow{color:var(--dim);font-size:12px;margin:0 2px;flex-shrink:0}
+.flow-advice{background:var(--acbg);border:1px solid rgba(124,109,240,.2);border-radius:var(--rds);padding:10px 14px;margin-bottom:20px;font-size:11px;color:var(--ac2);line-height:1.6}
+
+/* ── Prompt Card ── */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rd);margin-bottom:16px;overflow:hidden;transition:border-color .2s}
+.card:hover{border-color:var(--bdh)}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;transition:background .15s}
+.ch:hover{background:var(--s2)}
+.ch-left{display:flex;align-items:center;gap:10px}
+.ch .step-badge{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:22px;border-radius:4px;background:var(--acbg);color:var(--ac);font-size:10px;font-weight:700;padding:0 6px}
+.ch .ch-title{font-size:13px;font-weight:600}
+.ch .ch-sub{font-size:11px;color:var(--sub);margin-left:8px}
+.ch .arrow{transition:transform .25s;font-size:12px;color:var(--dim)}
+.card.open .ch .arrow{transform:rotate(180deg)}
+.card-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.card.open .card-body{max-height:5000px}
+.card-inner{padding:0 18px 18px}
+
+.pbox{background:var(--s2);border:1px solid var(--bd);border-radius:var(--rds);padding:14px 16px;font-size:12px;line-height:1.9;white-space:pre-wrap;word-break:break-word;position:relative;margin-bottom:10px}
+.pbox .v{background:var(--acbg);color:var(--ac2);padding:1px 4px;border-radius:3px;font-weight:600;font-size:11px;transition:all .3s}
+.pbox .v.filled{background:rgba(124,109,240,.25);font-weight:700}
+
+.cpb{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--rds);font-size:11px;font-weight:600;color:var(--sub);border:1px solid var(--bd);transition:all .2s;margin-bottom:10px}
+.cpb:hover{border-color:var(--ac);color:var(--ac)}
+.cpb.copied{border-color:var(--g);color:var(--g)}
+
+.out{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--rds);padding:10px 14px;font-size:11px;color:var(--g);margin-bottom:10px;line-height:1.6}
+.tip{background:var(--acbg);border:1px solid rgba(124,109,240,.2);border-radius:var(--rds);padding:10px 14px;font-size:11px;color:var(--ac2);margin-bottom:10px;line-height:1.6}
+.warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:var(--rds);padding:10px 14px;font-size:11px;color:var(--o);margin-bottom:10px;line-height:1.6}
+
+.nxt{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--rds);font-size:11px;font-weight:600;background:var(--ac);color:#fff;transition:all .2s;margin-top:4px}
+.nxt:hover{background:#6b5ce7;transform:translateY(-1px)}
+
+/* ── Footer ── */
+footer{text-align:center;padding:40px 16px;color:var(--dim);font-size:11px;border-top:1px solid var(--bd);margin-top:40px}
+footer a{color:var(--sub)}
+
+/* ── Responsive ── */
+@media(max-width:640px){
+  .onb{grid-template-columns:1fr 1fr}
+  .panel-inner{grid-template-columns:1fr}
+  .tab-btn{padding:8px 12px;font-size:11px}
+  .flow-step{padding:6px 10px}
+  .flow-step .sname{font-size:10px}
+}
+@media(max-width:400px){
+  .onb{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<div class="wrap">
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <h1>Design Prompt Lab</h1>
+  <p class="sub">会社情報を入力 → タブを選択 → ステップ順にプロンプトを実行</p>
+  <p class="desc">DesignCourse.com ワークフロー思想ベースの AI デザイン指示スクリプト集</p>
+</section>
+
+<!-- ── Onboarding ── -->
+<div class="onb">
+  <div class="onb-card"><div class="num">1</div><h3>会社情報を入力</h3><p>サービス名・業種・ターゲットなどを入力</p></div>
+  <div class="onb-card"><div class="num">2</div><h3>カテゴリを選択</h3><p>LP / SNS / HP / 営業資料 / ブランド / レビュー</p></div>
+  <div class="onb-card"><div class="num">3</div><h3>ステップ順に実行</h3><p>各プロンプトをコピーしてAIに貼り付け</p></div>
+  <div class="onb-card"><div class="num">4</div><h3>成果物を取得</h3><p>前のステップの結果を次に引き継ぎ完成</p></div>
+</div>
+
+<!-- ── Company Info Panel ── -->
+<div class="panel open" id="panel">
+  <div class="panel-head" onclick="toggle('panel')">
+    <h2>📋 会社・サービス情報</h2>
+    <span class="arrow">▼</span>
+  </div>
+  <div class="panel-body">
+    <div class="panel-inner">
+      <div class="fg"><label>会社名 / サービス名</label><input id="c_name" placeholder="株式会社 AIDMA"></div>
+      <div class="fg"><label>業種・業界</label><input id="c_industry" placeholder="Web マーケティング支援"></div>
+      <div class="fg"><label>ターゲットユーザー</label><input id="c_target" placeholder="Web 集客に課題がある中小企業の経営者"></div>
+      <div class="fg"><label>ブランドトーン</label><input id="c_tone" placeholder="専門的だが親しみやすい"></div>
+      <div class="fg"><label>ブランドカラー</label><input id="c_color" placeholder="#2563eb"></div>
+      <div class="fg"><label>サイト URL</label><input id="c_url" placeholder="https://aidma-hd.jp"></div>
+      <div class="fg wide"><label>サービス概要</label><textarea id="c_desc" placeholder="中小企業の Web 集客を支援するマーケティングサービス。SEO・広告運用・LP制作をワンストップで提供。"></textarea></div>
+      <div class="fg"><label>競合サービス</label><input id="c_competitor" placeholder="○○マーケティング"></div>
+      <div class="fg"><label>強み・差別化</label><input id="c_strength" placeholder="導入企業 500 社超の実績"></div>
+      <div class="fg"><label>CTA（最もしてほしい行動）</label><input id="c_cta" placeholder="無料相談の申し込み"></div>
+      <div class="panel-actions">
+        <button class="btn btn-primary" onclick="save()">💾 保存して全プロンプトに反映</button>
+        <button class="btn btn-ghost" onclick="clear_()">クリア</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Tab Bar ── -->
+<nav class="tabs-bar" id="tabsBar">
+  <button class="tab-btn act" onclick="go('lp',1)"><span class="icon">🖥</span>LP 制作<span class="badge">6</span></button>
+  <button class="tab-btn" onclick="go('sns',1)"><span class="icon">📱</span>SNS 運用<span class="badge">4</span></button>
+  <button class="tab-btn" onclick="go('hp',1)"><span class="icon">🌐</span>HP 制作<span class="badge">5</span></button>
+  <button class="tab-btn" onclick="go('sales',1)"><span class="icon">📊</span>営業資料<span class="badge">4</span></button>
+  <button class="tab-btn" onclick="go('brand',1)"><span class="icon">🎨</span>ブランド構築<span class="badge">4</span></button>
+  <button class="tab-btn" onclick="go('review',1)"><span class="icon">🔍</span>レビュー・改善<span class="badge">3</span></button>
+</nav>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TAB: LP制作 (6 Steps) -->
+<!-- ════════════════════════════════════════════ -->
+<div class="tc act" id="tc-lp">
+  <div class="flow-nav" id="fn-lp">
+    <div class="flow-step act" onclick="go('lp',1)"><span class="snum">1</span><span class="sname">ターゲット戦略</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('lp',2)"><span class="snum">2</span><span class="sname">セクション構成</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('lp',3)"><span class="snum">3</span><span class="sname">コピーライティング</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('lp',4)"><span class="snum">4</span><span class="sname">ビジュアル方針</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('lp',5)"><span class="snum">5</span><span class="sname">ワイヤーフレーム</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('lp',6)"><span class="snum">6</span><span class="sname">実装指示書</span></div>
+  </div>
+  <div class="flow-advice">💡 LP制作フローでは、ターゲット分析→構成→コピー→デザイン→ワイヤーフレーム→実装指示の順に進めます。各ステップの出力を次のステップに貼り付けてください。</div>
+
+  <!-- LP Step 1 -->
+  <div class="card open" id="lp-1">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 1</span><span class="ch-title">ターゲット戦略・訴求軸設計</span><span class="ch-sub">マーケティングストラテジスト</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはマーケティングストラテジストです。以下の企業情報をもとに、LP（ランディングページ）のターゲット戦略と訴求軸を設計してください。
+
+■ 企業情報
+・会社名/サービス名: {{c_name}}
+・業種: {{c_industry}}
+・ターゲット: {{c_target}}
+・サービス概要: {{c_desc}}
+・競合: {{c_competitor}}
+・強み・差別化: {{c_strength}}
+・CTA: {{c_cta}}
+
+■ 出力フォーマット（Markdown）
+1. **ペルソナ定義**（年齢・役職・課題・情報収集行動）
+2. **心理的バリア**（購入/問い合わせを躊躇する理由 3つ以上）
+3. **訴求軸の優先順位**（メイン訴求・サブ訴求・証拠訴求）
+4. **競合との差別化マトリクス**（自社 vs 競合の強み弱み表）
+5. **CTAまでの心理ステップ**（認知→興味→信頼→行動の各段階で必要な要素）
+
+■ 品質チェック
+- [ ] ペルソナが具体的で実在しそうか
+- [ ] 心理的バリアが3つ以上挙げられているか
+- [ ] 訴求軸に優先順位がついているか
+- [ ] 競合比較が客観的か</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 2 の入力として使用します</div>
+      <div class="tip">💡 プロのコツ: ペルソナは「35歳・中小企業のマーケ担当・月50万の広告費で成果が出ず焦っている」のように、感情まで描写すると後のコピーが刺さりやすくなります。</div>
+      <button class="nxt" onclick="go('lp',2)">Step 2 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- LP Step 2 -->
+  <div class="card" id="lp-2">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 2</span><span class="ch-title">セクション構成設計</span><span class="ch-sub">LP専門 UXデザイナー</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはLP専門のUXデザイナーです。以下のターゲット戦略をもとに、高コンバージョンLPのセクション構成を設計してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ターゲット: {{c_target}}
+・CTA: {{c_cta}}
+・ブランドトーン: {{c_tone}}
+
+■ 前ステップの結果
+[Step1のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **ページ全体の心理フロー**（ユーザーの感情変化を時系列で記述）
+2. **セクション構成表**（セクション名 / 目的 / 主要コンテンツ / 心理効果 の表形式、8〜12セクション）
+3. **ファーストビューの要素定義**（キャッチ・サブコピー・ビジュアル・CTA配置）
+4. **社会的証明の配置戦略**（実績数値・事例・ロゴ・口コミの配置場所と順序）
+5. **CTA配置マップ**（何セクション目に置くか・ボタンの文言案3パターン）
+
+■ 品質チェック
+- [ ] 心理フローが「不安→共感→期待→信頼→行動」に沿っているか
+- [ ] セクションが8つ以上あるか
+- [ ] CTAが3箇所以上配置されているか
+- [ ] ファーストビューに数値的根拠があるか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 3 の入力として使用します</div>
+      <div class="tip">💡 プロのコツ: LPの黄金構成は「FV→課題共感→解決策→特徴→実績→事例→料金→FAQ→CTA」です。業種に応じてアレンジしましょう。</div>
+      <button class="nxt" onclick="go('lp',3)">Step 3 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- LP Step 3 -->
+  <div class="card" id="lp-3">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 3</span><span class="ch-title">コピーライティング</span><span class="ch-sub">BtoB/BtoC コピーライター</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはコンバージョン特化のコピーライターです。以下の戦略とセクション構成をもとに、LP全体のコピーを作成してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ターゲット: {{c_target}}
+・ブランドトーン: {{c_tone}}
+・強み: {{c_strength}}
+・CTA: {{c_cta}}
+
+■ 前ステップの結果
+[Step1+Step2のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+各セクションについて以下を作成:
+1. **ファーストビュー**
+   - メインキャッチコピー（3案）
+   - サブコピー（各案に対応）
+   - CTAボタン文言（3案）
+2. **各セクションのコピー**
+   - 見出し（H2）
+   - リード文（2〜3文）
+   - 本文 or 箇条書き
+3. **マイクロコピー**（ボタン周辺・フォーム周辺の補足テキスト）
+4. **FAQ**（5問以上、購入障壁を解消する内容）
+
+■ コピーのルール
+- 専門用語を避け、{{c_target}}が日常的に使う言葉で書く
+- 数字を積極的に使う（「多くの」→「500社以上の」）
+- 各セクションの書き出しはユーザーの感情に寄り添う
+
+■ 品質チェック
+- [ ] メインコピーが3案以上あるか
+- [ ] CTAボタン文言が具体的な行動を示しているか
+- [ ] FAQが購入障壁を解消する内容か
+- [ ] 専門用語を避けているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 4 の入力として使用します</div>
+      <div class="warn">⚠️ コピーは必ずターゲットペルソナの視点で読み返してください。「自分ごと」に感じられないコピーはCVにつながりません。</div>
+      <button class="nxt" onclick="go('lp',4)">Step 4 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- LP Step 4 -->
+  <div class="card" id="lp-4">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 4</span><span class="ch-title">ビジュアルデザイン方針</span><span class="ch-sub">シニアデザイナー</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはシニアビジュアルデザイナーです。以下のLP戦略・構成・コピーをもとに、デザインの方向性とビジュアルルールを策定してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ブランドカラー: {{c_color}}
+・ブランドトーン: {{c_tone}}
+・サイトURL: {{c_url}}
+
+■ 前ステップの結果
+[Step1〜3のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **カラーパレット**
+   - プライマリ / セカンダリ / アクセント / 背景 / テキスト（HEX値）
+   - 各色の使用ルール
+2. **タイポグラフィ**
+   - 見出しフォント / 本文フォント / サイズ比（推奨Google Fonts）
+   - 行間・文字間の指定
+3. **ビジュアルスタイル**
+   - 写真のトーン&ムード（明るさ・彩度・被写体の指針）
+   - イラスト/アイコンのスタイル
+   - 角丸・シャドウ・余白のルール
+4. **レイアウト原則**
+   - グリッドシステム（カラム数・ガター幅）
+   - セクション間の余白ルール
+   - モバイルファーストの考慮点
+5. **インタラクション方針**
+   - スクロールアニメーションの有無と方向性
+   - ホバーエフェクトのスタイル
+   - CTAボタンのビジュアル仕様
+
+■ 品質チェック
+- [ ] カラーのコントラスト比が4.5:1以上か
+- [ ] フォントサイズがアクセシブルか（本文16px以上推奨）
+- [ ] モバイルでの表示を考慮しているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 5 の入力として使用します</div>
+      <div class="tip">💡 プロのコツ: ブランドカラーをそのままCTAボタンに使うのではなく、補色やアクセントカラーで目立たせるのがCV向上の定石です。</div>
+      <button class="nxt" onclick="go('lp',5)">Step 5 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- LP Step 5 -->
+  <div class="card" id="lp-5">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 5</span><span class="ch-title">ワイヤーフレーム仕様書</span><span class="ch-sub">UIデザイナー</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはUIデザイナーです。以下のLP設計資料をもとに、PC/SP両対応のワイヤーフレーム仕様書を作成してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ブランドカラー: {{c_color}}
+
+■ 前ステップの結果
+[Step2〜4のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+各セクションについて:
+1. **セクション名**
+2. **PC レイアウト**（カラム構成・要素の配置・幅指定）
+3. **SP レイアウト**（スタック方向・要素の並び順変更）
+4. **要素一覧表**（要素名 / タグ / サイズ / 配置 / 備考）
+5. **インタラクション定義**（hover / scroll / click の挙動）
+
+■ 特記事項
+- ファーストビューはPC: 2カラム / SP: 1カラム（スタック）
+- CTAボタンは SP でフローティング固定を検討
+- 画像プレースホルダーにはアスペクト比を明記
+- コンポーネントの再利用を意識（カード・ボタン・見出しの統一）
+
+■ 品質チェック
+- [ ] 全セクションのPC/SP両方のレイアウトが定義されているか
+- [ ] 要素のサイズ・余白が具体的な数値で指定されているか
+- [ ] タップターゲットが44px以上か（SP）</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 6 の入力として使用します</div>
+      <button class="nxt" onclick="go('lp',6)">Step 6 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- LP Step 6 -->
+  <div class="card" id="lp-6">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 6</span><span class="ch-title">実装指示書</span><span class="ch-sub">テクニカルディレクター</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはテクニカルディレクターです。以下のLP設計資料（全Step結果）をもとに、Cursor/エンジニア向けの実装指示書を作成してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ブランドカラー: {{c_color}}
+・サイトURL: {{c_url}}
+
+■ 前ステップの結果
+[Step1〜5の全AI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **技術スタック指定**
+   - 使用言語・フレームワーク・ライブラリ
+2. **ファイル構成**
+   - ディレクトリ構造とファイル役割
+3. **コンポーネント定義**（各コンポーネントについて）
+   - コンポーネント名 / Props / HTML構造 / CSS仕様
+4. **セクション別実装仕様**（全セクションについて）
+   - HTML構造（タグ・クラス名）
+   - CSSスタイル（具体的なプロパティ値）
+   - レスポンシブ対応（ブレークポイント別の変更点）
+5. **アニメーション仕様**
+   - トリガー / プロパティ / duration / easing
+6. **SEO・パフォーマンス要件**
+   - meta タグ一覧 / OGP設定 / Core Web Vitals 目標値
+7. **フォーム実装仕様**（CTA フォームがある場合）
+   - バリデーションルール / エラーメッセージ / 送信先
+
+■ 品質チェック
+- [ ] 全セクションの実装仕様が網羅されているか
+- [ ] レスポンシブ対応が明記されているか
+- [ ] アクセシビリティ（WCAG 2.1 AA）を考慮しているか
+- [ ] パフォーマンス目標が具体的か</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">🎉 LP制作フロー完了！ この実装指示書をエンジニアやCursorに渡して実装を開始できます。</div>
+      <div class="warn">⚠️ 実装前にクライアントまたはチームにコピー・デザイン方針のレビューを依頼することを推奨します。</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TAB: SNS運用 (4 Steps) -->
+<!-- ════════════════════════════════════════════ -->
+<div class="tc" id="tc-sns">
+  <div class="flow-nav" id="fn-sns">
+    <div class="flow-step act" onclick="go('sns',1)"><span class="snum">1</span><span class="sname">戦略・世界観設計</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('sns',2)"><span class="snum">2</span><span class="sname">テンプレート設計</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('sns',3)"><span class="snum">3</span><span class="sname">広告クリエイティブ</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('sns',4)"><span class="snum">4</span><span class="sname">運用カレンダー</span></div>
+  </div>
+  <div class="flow-advice">💡 SNS運用フローでは、ブランドの世界観設計から投稿テンプレート、広告素材、運用計画まで一気通貫で作成します。</div>
+
+  <!-- SNS Step 1 -->
+  <div class="card open" id="sns-1">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 1</span><span class="ch-title">戦略・世界観設計</span><span class="ch-sub">SNSストラテジスト</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはSNSマーケティングストラテジストです。以下の企業情報をもとに、SNS運用の戦略と世界観を設計してください。
+
+■ 企業情報
+・サービス名: {{c_name}}
+・業種: {{c_industry}}
+・ターゲット: {{c_target}}
+・サービス概要: {{c_desc}}
+・ブランドトーン: {{c_tone}}
+・競合: {{c_competitor}}
+
+■ 出力フォーマット（Markdown）
+1. **ペルソナのSNS行動分析**
+   - 使用SNS / 閲覧時間帯 / フォロー基準 / エンゲージ行動
+2. **プラットフォーム選定**（Instagram / X / LinkedIn / TikTok から優先順位付け）
+   - 各プラットフォームの活用目的と期待効果
+3. **世界観・トーン&マナー**
+   - ビジュアルトーン（色味・写真スタイル・フィルター方向性）
+   - テキストトーン（語尾・絵文字使用・ハッシュタグ戦略）
+   - NGルール（使ってはいけない表現・ビジュアル）
+4. **コンテンツカテゴリ**（5種類以上）
+   - カテゴリ名 / 目的 / 投稿頻度 / フォーマット
+5. **KPI設定**
+   - 3ヶ月・6ヶ月・12ヶ月の目標数値
+
+■ 品質チェック
+- [ ] ペルソナのSNS行動が具体的か
+- [ ] 3つ以上のプラットフォームを比較検討しているか
+- [ ] コンテンツカテゴリが5つ以上あるか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 2 の入力として使用します</div>
+      <div class="tip">💡 プロのコツ: 「フォロワー数」より「保存数」「シェア数」をKPIにすると、質の高いフォロワーが集まります。</div>
+      <button class="nxt" onclick="go('sns',2)">Step 2 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- SNS Step 2 -->
+  <div class="card" id="sns-2">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 2</span><span class="ch-title">テンプレート設計</span><span class="ch-sub">Canva/Figmaデザイナー</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはSNSビジュアルデザイナーです。以下のSNS戦略をもとに、Canva/Figmaで再現可能な投稿テンプレートを設計してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ブランドカラー: {{c_color}}
+・ブランドトーン: {{c_tone}}
+
+■ 前ステップの結果
+[Step1のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+各コンテンツカテゴリについて:
+1. **テンプレート名**
+2. **サイズ仕様**（Instagram: 1080x1080 / Story: 1080x1920 等）
+3. **レイアウト構成**（グリッド・余白・要素配置を文章で詳細に記述）
+4. **カラー指定**（背景色 / テキスト色 / アクセント色 のHEX値）
+5. **フォント指定**（見出し / 本文 / サイズ / ウェイト）
+6. **画像/イラスト指示**（被写体・構図・加工方法）
+7. **テキスト差し替え可能箇所**（変数化する部分を明示）
+
+■ 必須テンプレート
+- カルーセル投稿（情報発信用・5〜10枚構成）
+- 単体投稿（ブランディング用）
+- ストーリーズ（告知・アンケート用）
+- リール/動画サムネイル
+
+■ 品質チェック
+- [ ] 4種類以上のテンプレートが定義されているか
+- [ ] サイズが各プラットフォームの推奨に合っているか
+- [ ] ブランドカラーが統一的に使われているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 3 の入力として使用します</div>
+      <button class="nxt" onclick="go('sns',3)">Step 3 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- SNS Step 3 -->
+  <div class="card" id="sns-3">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 3</span><span class="ch-title">広告クリエイティブ</span><span class="ch-sub">広告デザインディレクター</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはSNS広告のクリエイティブディレクターです。以下の情報をもとに、Meta/LINE/TikTok広告のデザイン指示書を作成してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ターゲット: {{c_target}}
+・強み: {{c_strength}}
+・CTA: {{c_cta}}
+・ブランドカラー: {{c_color}}
+
+■ 前ステップの結果
+[Step1+Step2のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+各プラットフォームについて:
+1. **広告フォーマット**（静止画 / カルーセル / 動画）
+2. **サイズ仕様**
+3. **クリエイティブ構成**（3パターン以上）
+   - ビジュアル指示（被写体・構図・テキスト配置）
+   - メインコピー / サブコピー / CTAコピー
+   - カラー・フォント指定
+4. **A/Bテスト設計**
+   - テスト変数（コピー/ビジュアル/CTA）
+   - 各バリエーションの仮説
+5. **入稿規定チェックリスト**
+
+■ 品質チェック
+- [ ] 3パターン以上のクリエイティブがあるか
+- [ ] テキスト量が各プラットフォームの推奨以内か（画像内テキスト20%以下）
+- [ ] A/Bテストの設計が含まれているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 4 の入力として使用します</div>
+      <div class="warn">⚠️ Meta広告では画像内のテキスト量が多すぎるとリーチが制限されます。テキストオーバーレイは20%以内を目安にしてください。</div>
+      <button class="nxt" onclick="go('sns',4)">Step 4 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- SNS Step 4 -->
+  <div class="card" id="sns-4">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 4</span><span class="ch-title">運用カレンダー</span><span class="ch-sub">SNSプランナー</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはSNS運用プランナーです。以下の戦略・テンプレート・広告設計をもとに、1ヶ月分の投稿計画とKPI目標を策定してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・業種: {{c_industry}}
+・ターゲット: {{c_target}}
+
+■ 前ステップの結果
+[Step1〜3の全AI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **月間テーマ設定**
+   - 月のメインテーマとサブテーマ
+2. **週間投稿スケジュール**（4週分、表形式）
+   - 日付 / 曜日 / プラットフォーム / カテゴリ / 投稿内容概要 / 使用テンプレート / 投稿時間
+3. **各投稿の詳細**（最低10投稿分）
+   - キャプション全文（ハッシュタグ含む）
+   - ビジュアル指示
+4. **KPIトラッキングシート**
+   - 週次で計測する指標と目標値
+5. **緊急時対応ルール**
+   - 炎上リスク / ネガティブコメント対応方針
+
+■ 品質チェック
+- [ ] 4週間分の投稿が網羅されているか
+- [ ] 投稿頻度が現実的か（リソースに無理がないか）
+- [ ] KPIが具体的な数値で設定されているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">🎉 SNS運用フロー完了！ 運用カレンダーに従って投稿を開始できます。</div>
+      <div class="tip">💡 プロのコツ: 最初の1ヶ月は「テスト月」と位置づけ、エンゲージメントデータをもとに2ヶ月目以降の戦略を調整しましょう。</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TAB: HP制作 (5 Steps) -->
+<!-- ════════════════════════════════════════════ -->
+<div class="tc" id="tc-hp">
+  <div class="flow-nav" id="fn-hp">
+    <div class="flow-step act" onclick="go('hp',1)"><span class="snum">1</span><span class="sname">サイト戦略・IA設計</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('hp',2)"><span class="snum">2</span><span class="sname">デザインシステム</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('hp',3)"><span class="snum">3</span><span class="sname">ページ設計</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('hp',4)"><span class="snum">4</span><span class="sname">SEO設計</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('hp',5)"><span class="snum">5</span><span class="sname">実装指示書</span></div>
+  </div>
+  <div class="flow-advice">💡 HP制作フローでは、目的定義からサイトマップ、デザインシステム、各ページ設計、SEO、実装指示まで網羅します。</div>
+
+  <!-- HP Step 1 -->
+  <div class="card open" id="hp-1">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 1</span><span class="ch-title">サイト戦略・IA設計</span><span class="ch-sub">情報アーキテクト</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたは情報アーキテクト（IA）です。以下の企業情報をもとに、コーポレートサイト/サービスサイトの目的定義・サイトマップ・ナビゲーション設計を行ってください。
+
+■ 企業情報
+・会社名: {{c_name}}
+・業種: {{c_industry}}
+・ターゲット: {{c_target}}
+・サービス概要: {{c_desc}}
+・CTA: {{c_cta}}
+・サイトURL: {{c_url}}
+
+■ 出力フォーマット（Markdown）
+1. **サイト目的の定義**
+   - ビジネスゴール（3つ）
+   - ユーザーゴール（3つ）
+   - 成功指標（KPI）
+2. **サイトマップ**（階層構造、表形式）
+   - 第1階層 / 第2階層 / 第3階層 / URL案 / ページ目的
+3. **ナビゲーション設計**
+   - グローバルナビ（項目と順序）
+   - フッターナビ（項目と分類）
+   - パンくずリスト設計
+4. **ユーザーフロー**（主要3経路）
+   - 流入元→遷移先→CTA到達までのステップ
+5. **コンテンツ要件一覧**
+   - 各ページで必要なコンテンツ・素材のリスト
+
+■ 品質チェック
+- [ ] サイトマップが3階層以上の深さを持つか
+- [ ] 全ページにCTAへの導線が設計されているか
+- [ ] ユーザーフローが3経路以上定義されているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 2 の入力として使用します</div>
+      <div class="tip">💡 プロのコツ: 「3クリックルール」— どのページからでも3クリック以内にCTAに到達できる設計を心がけましょう。</div>
+      <button class="nxt" onclick="go('hp',2)">Step 2 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- HP Step 2 -->
+  <div class="card" id="hp-2">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 2</span><span class="ch-title">デザインシステム構築</span><span class="ch-sub">デザインシステムエンジニア</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはデザインシステムエンジニアです。以下のサイト戦略をもとに、サイト全体で使用するデザインシステム（カラー・タイポ・コンポーネント）を体系化してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ブランドカラー: {{c_color}}
+・ブランドトーン: {{c_tone}}
+
+■ 前ステップの結果
+[Step1のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **カラーシステム**
+   - ブランドカラー / セマンティックカラー / ニュートラルカラー（全HEX値）
+   - ダーク/ライトモード対応の考慮
+2. **タイポグラフィスケール**
+   - フォントファミリー / サイズスケール（h1〜body・small）/ ウェイト / 行間
+3. **スペーシングシステム**
+   - 4px or 8pxベースの間隔ルール
+4. **コンポーネントライブラリ**（最低10種）
+   - コンポーネント名 / バリエーション / サイズ / 状態（default/hover/active/disabled）
+   - ボタン / カード / フォーム / ナビ / ヘッダー / フッター / モーダル / バッジ / テーブル / アラート
+5. **アイコン・画像ルール**
+   - アイコンスタイル / サイズ / ストローク幅
+   - 画像アスペクト比 / 角丸 / オーバーレイ
+
+■ 品質チェック
+- [ ] コンポーネントが10種類以上定義されているか
+- [ ] 全状態（default/hover/active/disabled）が考慮されているか
+- [ ] スペーシングが一貫したシステムに基づいているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 3 の入力として使用します</div>
+      <button class="nxt" onclick="go('hp',3)">Step 3 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- HP Step 3 -->
+  <div class="card" id="hp-3">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 3</span><span class="ch-title">ページ設計</span><span class="ch-sub">Webデザイナー</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはWebデザイナーです。以下のサイト戦略とデザインシステムをもとに、主要ページのコンテンツ詳細設計を行ってください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ターゲット: {{c_target}}
+・サービス概要: {{c_desc}}
+・強み: {{c_strength}}
+・CTA: {{c_cta}}
+
+■ 前ステップの結果
+[Step1+Step2のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+以下のページそれぞれについて詳細設計:
+1. **トップページ**
+2. **サービス/プロダクトページ**
+3. **会社概要ページ**
+4. **お問い合わせページ**
+5. **ブログ/お知らせ一覧ページ**
+
+各ページの出力:
+- セクション構成（セクション名・目的・主要コンテンツ）
+- ワイヤーフレーム記述（PC/SP のレイアウトを文章で記述）
+- コピー案（見出し・リード文）
+- 使用コンポーネント一覧
+- CTA配置とマイクロコピー
+
+■ 品質チェック
+- [ ] 5ページ以上の設計が含まれているか
+- [ ] 各ページにCTAが配置されているか
+- [ ] PC/SPの両方のレイアウトが考慮されているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 4 の入力として使用します</div>
+      <button class="nxt" onclick="go('hp',4)">Step 4 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- HP Step 4 -->
+  <div class="card" id="hp-4">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 4</span><span class="ch-title">SEO設計</span><span class="ch-sub">SEOスペシャリスト</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはSEOスペシャリストです。以下のサイト設計をもとに、キーワード設計・meta設定・構造化データを策定してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・業種: {{c_industry}}
+・ターゲット: {{c_target}}
+・競合: {{c_competitor}}
+・サイトURL: {{c_url}}
+
+■ 前ステップの結果
+[Step1〜3のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **キーワードマップ**（表形式）
+   - ページ名 / メインKW / サブKW / 検索意図 / 想定検索ボリューム / 難易度
+2. **meta タグ設計**（全ページ分）
+   - title / description / h1（文字数カウント付き）
+3. **構造化データ設計**
+   - Organization / LocalBusiness / BreadcrumbList / FAQ（JSON-LD形式）
+4. **内部リンク戦略**
+   - ページ間のリンク構造マップ
+   - アンカーテキスト設計
+5. **テクニカルSEOチェックリスト**
+   - robots.txt / sitemap.xml / canonical / hreflang 等
+6. **コンテンツSEO戦略**
+   - ブログ記事のテーマ案（10記事分）
+
+■ 品質チェック
+- [ ] 全ページのmeta設計が含まれているか
+- [ ] title が30文字以内、descriptionが120文字以内か
+- [ ] 構造化データがJSON-LD形式で記述されているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 5 の入力として使用します</div>
+      <div class="tip">💡 プロのコツ: 構造化データは検索結果のリッチスニペット表示に直結します。FAQ schemaは特にCTRを改善しやすいので優先しましょう。</div>
+      <button class="nxt" onclick="go('hp',5)">Step 5 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- HP Step 5 -->
+  <div class="card" id="hp-5">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 5</span><span class="ch-title">実装指示書</span><span class="ch-sub">テクニカルディレクター</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはテクニカルディレクターです。以下の全Step結果を統合し、エンジニア向けの開発仕様書を作成してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ブランドカラー: {{c_color}}
+・サイトURL: {{c_url}}
+
+■ 前ステップの結果
+[Step1〜4の全AI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **技術スタック**
+   - フレームワーク / CMS / ホスティング推奨
+2. **ディレクトリ構造**
+3. **共通コンポーネント実装仕様**
+   - HTML構造 / CSSクラス設計（BEM等） / Props定義
+4. **ページ別実装仕様**（全ページ）
+   - セクション構造 / レスポンシブ対応 / アニメーション
+5. **SEO実装仕様**
+   - meta実装 / 構造化データ実装 / sitemap生成
+6. **パフォーマンス要件**
+   - Core Web Vitals 目標 / 画像最適化 / フォント読み込み戦略
+7. **デプロイ・運用仕様**
+   - ビルド手順 / 環境変数 / CI/CD
+
+■ 品質チェック
+- [ ] 全ページの実装仕様が含まれているか
+- [ ] アクセシビリティ（WCAG 2.1 AA）対応が明記されているか
+- [ ] パフォーマンス目標が具体的か</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">🎉 HP制作フロー完了！ この統合開発仕様書でサイト構築を開始できます。</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TAB: 営業資料 (4 Steps) -->
+<!-- ════════════════════════════════════════════ -->
+<div class="tc" id="tc-sales">
+  <div class="flow-nav" id="fn-sales">
+    <div class="flow-step act" onclick="go('sales',1)"><span class="snum">1</span><span class="sname">ストーリーライン</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('sales',2)"><span class="snum">2</span><span class="sname">スライドデザイン</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('sales',3)"><span class="snum">3</span><span class="sname">コンテンツ作成</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('sales',4)"><span class="snum">4</span><span class="sname">ホワイトペーパー展開</span></div>
+  </div>
+  <div class="flow-advice">💡 営業資料フローでは、聴き手の意思決定フローに沿った論理構成から、スライドデザイン、完成版コピー、WP展開まで一気通貫で作成します。</div>
+
+  <!-- Sales Step 1 -->
+  <div class="card open" id="sales-1">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 1</span><span class="ch-title">ストーリーライン設計</span><span class="ch-sub">プレゼンテーション戦略家</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはプレゼンテーション戦略の専門家です。以下の企業情報をもとに、聴き手の意思決定フローに沿った営業資料のストーリーラインを設計してください。
+
+■ 企業情報
+・サービス名: {{c_name}}
+・業種: {{c_industry}}
+・ターゲット: {{c_target}}
+・サービス概要: {{c_desc}}
+・競合: {{c_competitor}}
+・強み: {{c_strength}}
+・CTA: {{c_cta}}
+
+■ 出力フォーマット（Markdown）
+1. **聴き手分析**
+   - 意思決定者のペルソナ / 関心事 / 判断基準 / 反対理由
+2. **ストーリー構成**（スライド番号ごと）
+   - スライド番号 / セクション名 / 目的 / キーメッセージ / 聴き手の感情変化
+3. **論理フロー**
+   - 課題提起 → 原因分析 → 解決策提示 → 自社の優位性 → 実績・証拠 → 提案 → CTA
+4. **キラースライド特定**（最も重要な3枚）
+   - 各スライドがなぜ重要か、何を伝えるべきか
+5. **想定Q&A**（5問以上）
+   - 想定質問 / 回答方針
+
+■ 品質チェック
+- [ ] 15〜20枚程度の構成になっているか
+- [ ] 各スライドのキーメッセージが1つに絞られているか
+- [ ] 競合との差別化ポイントが明確か</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 2 の入力として使用します</div>
+      <div class="tip">💡 プロのコツ: 営業資料は「自社がすごい」ではなく「聴き手の課題が解決される」ストーリーが最も効果的です。</div>
+      <button class="nxt" onclick="go('sales',2)">Step 2 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- Sales Step 2 -->
+  <div class="card" id="sales-2">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 2</span><span class="ch-title">スライドデザイン</span><span class="ch-sub">プレゼンデザイナー</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはプレゼンテーションデザイナーです。以下のストーリーラインをもとに、12種のレイアウトパターンを定義してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ブランドカラー: {{c_color}}
+・ブランドトーン: {{c_tone}}
+
+■ 前ステップの結果
+[Step1のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **デザインルール**
+   - カラー（プライマリ/セカンダリ/背景/テキスト HEX値）
+   - フォント（見出し/本文/サイズ/ウェイト）
+   - 余白・グリッド（マージン・ガター）
+2. **12種レイアウトパターン**
+   各パターンについて:
+   - パターン名（例:「タイトルスライド」「2カラム比較」「数値インパクト」等）
+   - 用途（どの内容に使うか）
+   - 要素配置（テキスト・画像・図表の位置を文章で記述）
+   - カラー配分
+3. **アニメーション・トランジション方針**
+4. **使用禁止事項**（デザインのNG例）
+
+■ 品質チェック
+- [ ] 12種のレイアウトパターンが定義されているか
+- [ ] 各パターンの用途が明確か
+- [ ] ブランドカラーの使用ルールが統一されているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 3 の入力として使用します</div>
+      <button class="nxt" onclick="go('sales',3)">Step 3 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- Sales Step 3 -->
+  <div class="card" id="sales-3">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 3</span><span class="ch-title">コンテンツ作成</span><span class="ch-sub">コンテンツライター</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたは営業資料専門のコンテンツライターです。以下のストーリーラインとデザインパターンをもとに、全スライドの完成版コピーと図解指示を作成してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ターゲット: {{c_target}}
+・サービス概要: {{c_desc}}
+・強み: {{c_strength}}
+
+■ 前ステップの結果
+[Step1+Step2のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+全スライドについて:
+1. **スライド番号・タイトル**
+2. **使用レイアウトパターン**（Step2で定義したもの）
+3. **見出しコピー**
+4. **本文コピー**（箇条書き or 段落）
+5. **図解・グラフ指示**（データ内容・表示形式・ラベル）
+6. **画像指示**（被写体・構図・トーン）
+7. **スピーカーノート**（プレゼン時の補足説明）
+
+■ 品質チェック
+- [ ] 全スライドのコピーが完成しているか
+- [ ] 1スライド1メッセージの原則が守られているか
+- [ ] 図解指示が具体的か（「グラフ」だけでなく内容まで指定）</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 4 の入力として使用します</div>
+      <button class="nxt" onclick="go('sales',4)">Step 4 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- Sales Step 4 -->
+  <div class="card" id="sales-4">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 4</span><span class="ch-title">ホワイトペーパー展開</span><span class="ch-sub">リードジェネレーション担当</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはリードジェネレーションの専門家です。以下の営業資料をもとに、リード獲得用のホワイトペーパー（WP）に変換してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・業種: {{c_industry}}
+・ターゲット: {{c_target}}
+・CTA: {{c_cta}}
+
+■ 前ステップの結果
+[Step1〜3の全AI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **WPコンセプト設計**
+   - タイトル案（3案） / サブタイトル / ターゲット読者 / ダウンロード動機
+2. **目次構成**（8〜12章）
+   - 章タイトル / ページ数目安 / キーメッセージ
+3. **各章の本文**（要約版 + 展開指示）
+   - 営業資料のどの部分を拡張するか
+   - 追加すべきデータ・事例・解説
+4. **リード獲得フォーム設計**
+   - 取得項目 / 必須/任意 / フォーム周辺コピー
+5. **ダウンロードLP構成**
+   - ファーストビュー / WPの価値訴求 / 目次プレビュー / CTA
+6. **配信戦略**
+   - メール配信 / SNS告知 / 広告出稿の方針
+
+■ 品質チェック
+- [ ] WPタイトルが「ダウンロードしたくなる」魅力的なものか
+- [ ] 営業色が強すぎず、教育的価値が提供されているか
+- [ ] リード獲得フォームの項目が最小限か</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">🎉 営業資料フロー完了！ スライド制作とホワイトペーパー展開を開始できます。</div>
+      <div class="warn">⚠️ ホワイトペーパーは営業資料のコピーではなく「読者に価値を提供する独立コンテンツ」として再構成してください。</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TAB: ブランド構築 (4 Steps) -->
+<!-- ════════════════════════════════════════════ -->
+<div class="tc" id="tc-brand">
+  <div class="flow-nav" id="fn-brand">
+    <div class="flow-step act" onclick="go('brand',1)"><span class="snum">1</span><span class="sname">ブランド戦略策定</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('brand',2)"><span class="snum">2</span><span class="sname">ロゴコンセプト</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('brand',3)"><span class="snum">3</span><span class="sname">VI構築</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('brand',4)"><span class="snum">4</span><span class="sname">ガイドライン完成</span></div>
+  </div>
+  <div class="flow-advice">💡 ブランド構築フローでは、ミッション策定からVI（ビジュアルアイデンティティ）、統合ガイドラインまで一貫したブランドを構築します。</div>
+
+  <!-- Brand Step 1 -->
+  <div class="card open" id="brand-1">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 1</span><span class="ch-title">ブランド戦略策定</span><span class="ch-sub">ブランドストラテジスト</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはブランドストラテジストです。以下の企業情報をもとに、ブランドのミッション・ポジショニング・パーソナリティを策定してください。
+
+■ 企業情報
+・会社名: {{c_name}}
+・業種: {{c_industry}}
+・ターゲット: {{c_target}}
+・サービス概要: {{c_desc}}
+・競合: {{c_competitor}}
+・強み: {{c_strength}}
+・ブランドトーン: {{c_tone}}
+
+■ 出力フォーマット（Markdown）
+1. **ブランドミッション**
+   - ミッションステートメント（1文）
+   - ビジョン（目指す未来像）
+   - バリュー（3〜5つの価値観）
+2. **ブランドポジショニング**
+   - ポジショニングマップ（2軸で競合と比較）
+   - ポジショニングステートメント（テンプレート:「[ターゲット]にとって、[ブランド名]は[カテゴリ]の中で[差別化ポイント]を提供する唯一の[種類]です」）
+3. **ブランドパーソナリティ**
+   - 人格化（このブランドが人間だったら？年齢・性格・話し方・服装）
+   - トーンオブボイス（フォーマル↔カジュアル、真面目↔遊び心 等の5軸スケール）
+   - 使う言葉 / 使わない言葉リスト
+4. **ブランドストーリー**
+   - 創業の背景 / 課題認識 / 解決への道のり / 現在の使命（300字程度）
+5. **ブランドプロミス**
+   - 顧客への約束（1文）
+
+■ 品質チェック
+- [ ] ミッション・ビジョン���明確で簡潔か
+- [ ] ポジショニングが競合と差別化されているか
+- [ ] パーソナリティが一貫性を持っているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 2 の入力として使用します</div>
+      <div class="tip">💡 プロのコツ: ブランドパーソナリティは「もしこのブランドがパーティに来たら、どんな振る舞いをするか？」で考えるとイメージしやすくなります。</div>
+      <button class="nxt" onclick="go('brand',2)">Step 2 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- Brand Step 2 -->
+  <div class="card" id="brand-2">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 2</span><span class="ch-title">ロゴコンセプト設計</span><span class="ch-sub">ロゴデザイナー</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはロゴデザインの専門家です。以下のブランド戦略をもとに、ロゴの詳細コンセプトと使用規定を設計してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ブランドカラー: {{c_color}}
+・ブランドトーン: {{c_tone}}
+
+■ 前ステップの結果
+[Step1のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **ロゴコンセプト**（5案）
+   各案について:
+   - コンセプト名 / デザインの方向性
+   - シンボル要素（何をモチーフにするか）
+   - 書体の方向性（ゴシック/明朝/手書き/幾何学 等）
+   - カラー方針
+   - ブランドパーソナリティとの接続点
+2. **推奨案の詳細仕様**（5案から1案を推奨）
+   - デザイン制作指示（形状・比率・線幅を詳細に記述）
+   - カラーバリエーション（フルカラー/モノクロ/白抜き）
+3. **使用規定**
+   - 最小サイズ / アイソレーション（余白）ルール
+   - 背景色別の使用ルール
+   - NG使用例（変形・色変え・回転等の禁止事項）
+4. **ファビコン・SNSアイコン指示**
+   - 各サイズでの簡略化方針
+
+■ 品質チェック
+- [ ] 5案以上のコンセプトが提示されているか
+- [ ] 推奨案の制作指示が具体的か
+- [ ] 使用規定（NG例含む）が明確か</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 3 の入力として使用します</div>
+      <button class="nxt" onclick="go('brand',3)">Step 3 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- Brand Step 3 -->
+  <div class="card" id="brand-3">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 3</span><span class="ch-title">VI構築</span><span class="ch-sub">VIデザイナー</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはVI（ビジュアルアイデンティティ）デザイナーです。以下のブランド戦略とロゴコンセプトをもとに、配色・タイポ・写真・アイコンスタイルを体系化してください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・ブランドカラー: {{c_color}}
+
+■ 前ステップの結果
+[Step1+Step2のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **カラーパレット**
+   - プライマリ（メイン+濃淡5段階 HEX値）
+   - セカンダリ（2〜3色）
+   - ニュートラル（グレースケール5段階）
+   - セマンティック（成功/警告/エラー/情報）
+   - 各色の使用比率ルール（60-30-10法則）
+2. **タイポグラフィ**
+   - 日本語フォント / 英字フォント
+   - サイズスケール（h1〜body〜caption）
+   - 行間・文字間のルール
+   - Web / 印刷 それぞれの指定
+3. **フォトグラフィ**
+   - 写真のトーン&ムード指針
+   - 被写体ルール / NG表現
+   - フィルター・加工指示
+4. **アイコン・イラストレーション**
+   - スタイル（線画/塗り/デュオトーン等）
+   - ストローク幅 / 角丸 / サイズ規定
+5. **パターン・テクスチャ**
+   - ブランドパターンの方向性
+   - 使用場面と使用ルール
+
+■ 品質チェック
+- [ ] カラーの濃淡バリエーションが十分か
+- [ ] フォント指定がWeb/印刷の両方を考慮しているか
+- [ ] 写真のNG表現が明記されているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 4 の入力として使用します</div>
+      <button class="nxt" onclick="go('brand',4)">Step 4 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- Brand Step 4 -->
+  <div class="card" id="brand-4">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 4</span><span class="ch-title">ブランドガイドライン完成</span><span class="ch-sub">ブランドマネージャー</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはブランドマネージャーです。以下の全Step結果を統合し、社内外で共有可能なブランドガイドラインのルールブックを完成させてください。
+
+■ サービス情報
+・サービス名: {{c_name}}
+・業種: {{c_industry}}
+
+■ 前ステップの結果
+[Step1〜3の全AI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **はじめに**（ガイドラインの目的と使い方）
+2. **ブランドストーリー**（Step1より統合）
+3. **ブランドエッセンス**（ミッション/ビジョン/バリュー/プロミス）
+4. **ロゴ規定**（Step2より統合）
+5. **カラー規定**（Step3より統合）
+6. **タイポグラフィ規定**（Step3より統合）
+7. **写真・イラスト規定**（Step3より統合）
+8. **トーンオブボイス**（Step1より、使用例・NG例付き）
+9. **各メディア別適用ルール**
+   - Web / 印刷物 / SNS / 動画 / 名刺 / 封筒
+10. **FAQ**（よくある質問と回答）
+11. **お問い合わせ先**（ブランドに関する相談窓口）
+
+■ 品質チェック
+- [ ] 全セクションが統合されているか
+- [ ] 実例・NG例が含まれているか
+- [ ] 社外パートナーにも理解できる記述か</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">🎉 ブランド構築フロー完了！ このガイドラインを社内外のステークホルダーに共有できます。</div>
+      <div class="tip">💡 プロのコツ: ガイドラインは「守るためのルール」ではなく「迷ったときの判断基準」として活用されるべきです。実例を多く含めましょう。</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TAB: レビュー・改善 (3 Steps) -->
+<!-- ════════════════════════════════════════════ -->
+<div class="tc" id="tc-review">
+  <div class="flow-nav" id="fn-review">
+    <div class="flow-step act" onclick="go('review',1)"><span class="snum">1</span><span class="sname">UIデザインレビュー</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('review',2)"><span class="snum">2</span><span class="sname">アクセシビリティ監査</span></div><span class="flow-arrow">→</span>
+    <div class="flow-step" onclick="go('review',3)"><span class="snum">3</span><span class="sname">CRO改善提案</span></div>
+  </div>
+  <div class="flow-advice">💡 レビュー・改善フローでは、既存のデザインやサイトを多角的に評価し、具体的な改善施策を提案します。</div>
+
+  <!-- Review Step 1 -->
+  <div class="card open" id="review-1">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 1</span><span class="ch-title">UIデザインレビュー</span><span class="ch-sub">シニアUIレビュアー</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはシニアUIデザインレビュアーです。以下の情報をもとに、UIデザインの8項目×5段階評価と改善案を提示してください。
+
+■ レビュー対象
+・サービス名: {{c_name}}
+・サイトURL: {{c_url}}
+・ターゲット: {{c_target}}
+・ブランドトーン: {{c_tone}}
+
+[レビュー対象のスクリーンショットまたはデザインデータの説明をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **総合スコア**（/40点）
+2. **8項目評価**（各5点満点、表形式）
+   - ① ビジュアルヒエラルキー（情報の優先順位が視覚的に明確か）
+   - ② カラー&コントラスト（配色の一貫性とアクセシビリティ）
+   - ③ タイポグラフィ（読みやすさ・フォント選択・サイズ階層）
+   - ④ スペーシング&レイアウト（余白の一貫性・グリッド整合性）
+   - ⑤ コンポーネント一貫性（ボタン・カード・フォーム等の統一性）
+   - ⑥ ナビゲーション（直感的な導線設計）
+   - ⑦ モバイル対応（レスポンシブ品質）
+   - ⑧ マイクロインタラクション（hover・遷移・フィードバック）
+3. **各項目の詳細**
+   - 現状の問題点 / 改善案 / 優先度（高/中/低） / 改善難易度
+4. **クイックウィン**（すぐに実施できる改善3つ）
+5. **中長期改善ロードマップ**
+
+■ 品質チェック
+- [ ] 8項目すべてに評価と改善案があるか
+- [ ] 改善案が具体的で実行可能か
+- [ ] 優先度が設定されているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 2 の入力として使用します</div>
+      <div class="tip">💡 プロのコツ: レビューは「主観的な好み」ではなく「ユーザビリティの原則」に基づいて行いましょう。ニールセンの10ヒューリスティックスが参考になります。</div>
+      <button class="nxt" onclick="go('review',2)">Step 2 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- Review Step 2 -->
+  <div class="card" id="review-2">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 2</span><span class="ch-title">アクセシビリティ監査</span><span class="ch-sub">A11yスペシャリスト</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはWebアクセシビリティのスペシャリストです。以下の情報をもとに、WCAG 2.1 AA準拠のアクセシビリティ監査を実施してください。
+
+■ 監査対象
+・サービス名: {{c_name}}
+・サイトURL: {{c_url}}
+
+[UIデザインレビュー結果または対象ページの説明をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **準拠レベル判定**（A / AA / AAA / 非準拠）
+2. **WCAG 2.1 AA チェック結果**（表形式）
+   - ガイドライン番号 / 項目名 / 判定（✅/❌/⚠️） / 詳細
+   主要チェック項目:
+   - 1.1.1 非テキストコンテンツ（alt属性）
+   - 1.3.1 情報と関係性（セマンティックHTML）
+   - 1.4.3 コントラスト（最低比 4.5:1）
+   - 1.4.4 テキストのサイズ変更（200%まで）
+   - 2.1.1 キーボードアクセス
+   - 2.4.1 ブロックスキップ
+   - 2.4.4 リンクの目的
+   - 3.1.1 ページの言語
+   - 4.1.1 構文解析
+   - 4.1.2 名前・役割・値
+3. **重大な問題**（即座に修正すべき項目）
+4. **改善推奨事項**（優先度別）
+5. **実装コード例**（主要な修正のHTML/CSS/ARIA例）
+
+■ 品質チェック
+- [ ] WCAG 2.1 AAの主要項目が網羅されているか
+- [ ] コントラスト比の具体的な数値が示されているか
+- [ ] 修正のコード例が含まれているか</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">📌 この結果を保存してください → Step 3 の入力として使用します</div>
+      <div class="warn">⚠️ アクセシビリティ対応は法的要件になりつつあります（障害者差別解消法の合理的配慮）。最低限WCAG 2.1 AAレベルの準拠を目指しましょう。</div>
+      <button class="nxt" onclick="go('review',3)">Step 3 へ進む →</button>
+    </div></div>
+  </div>
+
+  <!-- Review Step 3 -->
+  <div class="card" id="review-3">
+    <div class="ch" onclick="tog(this)">
+      <div class="ch-left"><span class="step-badge">Step 3</span><span class="ch-title">CRO改善提案</span><span class="ch-sub">CROスペシャリスト</span></div>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="card-body"><div class="card-inner">
+      <div class="pbox">あなたはCRO（コンバージョン率最適化）スペシャリストです。以下のUIレビューとアクセシビリティ監査の結果をもとに、CV率改善の優先度付き提案書を作成してください。
+
+■ 対象情報
+・サービス名: {{c_name}}
+・ターゲット: {{c_target}}
+・CTA: {{c_cta}}
+・サイトURL: {{c_url}}
+
+■ 前ステップの結果
+[Step1+Step2のAI回答をここに貼り付けてください]
+
+■ 出力フォーマット（Markdown）
+1. **現状のCV率推定と課題サマリー**
+2. **改善施策一覧**（優先度順、表形式）
+   - 施策名 / カテゴリ / 期待効果 / 実装難易度 / 優先度スコア
+   カテゴリ例: CTA最適化 / フォーム改善 / 社会的証明 / ページ速度 / コピー改善
+3. **TOP5施策の詳細**
+   各施策について:
+   - 現状の問題点（データ/根拠）
+   - 改善施策の具体的内容
+   - 実装方法（コード例・デザイン指示）
+   - A/Bテスト設計（仮説・テスト変数・成功基準）
+   - 期待されるCV率改善幅
+4. **A/Bテストロードマップ**（3ヶ月計画）
+   - 月ごとのテスト対象と優先順位
+5. **計測・分析設計**
+   - GA4イベント設計 / ヒートマップ設定 / ファネル分析設計
+
+■ 品質チェック
+- [ ] 施策に優先度スコアが付いているか
+- [ ] 各施策にA/Bテスト設計が含まれているか
+- [ ] 3ヶ月のロードマップが現実的か</div>
+      <button class="cpb" onclick="cp(event)">📋 コピー</button>
+      <div class="out">🎉 レビュー・改善フロー完了！ 優先度の高い施策からA/Bテストを実施してCV率改善を開始できます。</div>
+      <div class="tip">💡 プロのコツ: CRO改善は「一度に全部変える」のではなく「一つずつA/Bテストで検証する」のが鉄則です。複数要素を同時に変えると、何が効果を出したか分からなくなります。</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<footer>
+  <p>Design Prompt Lab v1.0 — DesignCourse.com ワークフロー思想ベース</p>
+  <p style="margin-top:4px">プロンプト内の会社情報は外部に送信されません（ブラウザ内完結）</p>
+</footer>
+
+</div><!-- /.wrap -->
+
+<script>
+/* ── Data Store ── */
+const D={};
+const fields=['c_name','c_industry','c_target','c_tone','c_color','c_url','c_desc','c_competitor','c_strength','c_cta'];
+const defaults={c_name:'会社名/サービス名',c_industry:'業種・業界',c_target:'ターゲットユーザー',c_tone:'ブランドトーン',c_color:'ブランドカラー',c_url:'サイトURL',c_desc:'サービス概要',c_competitor:'競合サービス',c_strength:'強み・差別化',c_cta:'CTA'};
+
+/* ── initV: convert {{c_xxx}} to spans ── */
+function initV(){
+  document.querySelectorAll('.pbox').forEach(box=>{
+    box.innerHTML=box.innerHTML.replace(/\{\{(c_\w+)\}\}/g,(_,k)=>{
+      const txt=D[k]||defaults[k]||k;
+      const filled=D[k]?'filled':'';
+      return `<span class="v ${filled}" data-key="${k}">${txt}</span>`;
+    });
+  });
+}
+
+/* ── save: store inputs, update all .v spans ── */
+function save(){
+  fields.forEach(f=>{
+    const el=document.getElementById(f);
+    if(el)D[f]=el.value.trim();
+  });
+  document.querySelectorAll('.v').forEach(sp=>{
+    const k=sp.dataset.key;
+    if(D[k]){
+      sp.textContent=D[k];
+      sp.classList.add('filled');
+    }else{
+      sp.textContent=defaults[k]||k;
+      sp.classList.remove('filled');
+    }
+  });
+  showToast('✅ 反映完了！');
+}
+
+/* ── clear_: reset all fields ── */
+function clear_(){
+  fields.forEach(f=>{
+    const el=document.getElementById(f);
+    if(el)el.value='';
+    delete D[f];
+  });
+  initV();
+  showToast('🗑 クリアしました');
+}
+
+/* ── tog: card open/close ── */
+function tog(h){
+  const card=h.closest('.card');
+  if(card)card.classList.toggle('open');
+}
+
+/* ── toggle: panel open/close ── */
+function toggle(id){
+  const el=document.getElementById(id);
+  if(el)el.classList.toggle('open');
+}
+
+/* ── cp: copy prompt text ── */
+function cp(e){
+  const btn=e.target.closest('.cpb');
+  const card=btn.closest('.card-inner');
+  const pbox=card.querySelector('.pbox');
+  const text=pbox.innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.classList.add('copied');
+    btn.innerHTML='✅ コピー済み';
+    setTimeout(()=>{
+      btn.classList.remove('copied');
+      btn.innerHTML='📋 コピー';
+    },2000);
+  });
+}
+
+/* ── go: tab switch + step navigation ── */
+function go(tab,num){
+  // Tab switch
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('act'));
+  const tc=document.getElementById('tc-'+tab);
+  if(tc)tc.classList.add('act');
+
+  // Tab bar active
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('act'));
+  const tabIds=['lp','sns','hp','sales','brand','review'];
+  const idx=tabIds.indexOf(tab);
+  const btns=document.querySelectorAll('.tab-btn');
+  if(btns[idx])btns[idx].classList.add('act');
+
+  // Flow nav active
+  const fn=document.getElementById('fn-'+tab);
+  if(fn){
+    const steps=fn.querySelectorAll('.flow-step');
+    steps.forEach((s,i)=>{
+      s.classList.remove('act','done');
+      if(i+1<num)s.classList.add('done');
+      if(i+1===num)s.classList.add('act');
+    });
+  }
+
+  // Open target card, close others
+  const cards=tc?tc.querySelectorAll('.card'):[];
+  cards.forEach(c=>c.classList.remove('open'));
+  const target=document.getElementById(tab+'-'+num);
+  if(target){
+    target.classList.add('open');
+    setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),100);
+  }
+}
+
+/* ── Toast ── */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ── Init ── */
+initV();
+</script>
+</body>
+</html>
